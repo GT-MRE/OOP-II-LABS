@@ -8,12 +8,15 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage; 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Genres extends Application {
 
     @Override
     public void start(Stage stage) {
-        
+        DatabaseHandler.setupDatabase();
         
         // Labels
         Text text1 = new Text("Name:");
@@ -49,7 +52,50 @@ public class Genres extends Application {
         gridPane.add(text2, 0, 2);       
         gridPane.add(comboBox, 1, 2);    
         
-        gridPane.add(button2, 1, 3);     
+        gridPane.add(button2, 1, 3);
+        
+        
+        // Save button action to insert genre into the database
+        button1.setOnAction(e -> {
+            String genreName = textField1.getText();
+            if (genreName.isEmpty()) return;
+
+            String sql = "INSERT INTO Genres(genre, isactive) VALUES(?, 1)";
+            try (Connection conn = DatabaseHandler.connect()) {
+                if (conn == null) {
+                    System.err.println("Cannot save genre: database connection unavailable.");
+                    return;
+                }
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, genreName); // Sets genre name
+                pstmt.executeUpdate(); // Executes the insert statement
+                textField1.clear(); // Clear the text field after saving
+                System.out.println("Genre saved: " + genreName);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        // Used to make a genre inactive in the database
+        button2.setOnAction(e -> {
+            String selectedGenre = comboBox.getValue();
+            if (selectedGenre == null) return;
+
+            String sql = "UPDATE Genres SET isactive = 0 WHERE genre = ?";
+            try (Connection conn = DatabaseHandler.connect()) {
+                if (conn == null) {
+                    System.err.println("Cannot remove genre: database connection unavailable.");
+                    return;
+                }
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.setString(1, selectedGenre); // Sets the genre to be removed
+                pstmt.executeUpdate(); // Executes the update statement
+                comboBox.getItems().remove(selectedGenre); // Remove from ComboBox
+                System.out.println("Genre removed: " + selectedGenre);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
         
         //  Styling nodes
         button1.setStyle("-fx-background-color: darkslateblue; -fx-text-fill: white; -fx-font-size: 13pt;");
