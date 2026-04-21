@@ -1,0 +1,5 @@
+.vscode/
+bin/
+target/
+javafx-template/
+*.class
