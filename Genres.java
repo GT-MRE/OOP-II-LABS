@@ -10,9 +10,32 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage; 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Genres extends Application {
+
+    // Load active genres from the database and populate the registered combo box.
+    private void loadGenres(ComboBox<String> comboBox) {
+        comboBox.getItems().clear();
+
+        String sql = "SELECT genre FROM Genres WHERE isactive = 1 ORDER BY genre";
+        try (Connection conn = DatabaseHandler.connect()) {
+            if (conn == null) {
+                System.err.println("Cannot load genres: database connection unavailable.");
+                return;
+            }
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql);
+                 ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    comboBox.getItems().add(rs.getString("genre"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Error loading genres: " + ex.getMessage());
+        }
+    }
 
     @Override
     public void start(Stage stage) {
@@ -53,6 +76,8 @@ public class Genres extends Application {
         gridPane.add(comboBox, 1, 2);    
         
         gridPane.add(button2, 1, 3);
+
+        loadGenres(comboBox);
         
         
         // Save button action to insert genre into the database
@@ -70,6 +95,7 @@ public class Genres extends Application {
                 pstmt.setString(1, genreName); // Sets genre name
                 pstmt.executeUpdate(); // Executes the insert statement
                 textField1.clear(); // Clear the text field after saving
+                loadGenres(comboBox); // Refresh genres from DB after save
                 System.out.println("Genre saved: " + genreName);
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -90,7 +116,7 @@ public class Genres extends Application {
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, selectedGenre); // Sets the genre to be removed
                 pstmt.executeUpdate(); // Executes the update statement
-                comboBox.getItems().remove(selectedGenre); // Remove from ComboBox
+                loadGenres(comboBox); // Refresh genres from DB after remove
                 System.out.println("Genre removed: " + selectedGenre);
             } catch (SQLException ex) {
                 ex.printStackTrace();

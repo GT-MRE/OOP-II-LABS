@@ -14,6 +14,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Customers extends Application {
+
+    // Load active customers from the database and populate the registered combo box.
+    private void loadRegisteredCustomers(ComboBox<String> comboBoxRegistered) {
+        comboBoxRegistered.getItems().clear();
+
+        String sql = "SELECT Fullname FROM Clients WHERE isactive = 1 ORDER BY Fullname";
+        try (Connection conn = DatabaseHandler.connect()) {
+            if (conn == null) {
+                System.err.println("Cannot load customers: database connection unavailable.");
+                return;
+            }
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql);
+                 ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    comboBoxRegistered.getItems().add(rs.getString("Fullname"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Error loading customers: " + ex.getMessage());
+        }
+    }
     
     @Override
     public void start(Stage stage) {
@@ -54,19 +76,7 @@ public class Customers extends Application {
         gridPane.add(btnSave, 1, 3);
         gridPane.add(btnRemove, 1, 5);
 
-        // Load active customers saved in previous sessions.
-        String loadSql = "SELECT Fullname FROM Clients WHERE isactive = 1 ORDER BY Fullname";
-        try (Connection conn = DatabaseHandler.connect()) {
-            if (conn != null) {
-                PreparedStatement pstmt = conn.prepareStatement(loadSql);
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    comboBoxRegistered.getItems().add(rs.getString("Fullname")); // Add active customers to the combo box
-                }
-            }
-        } catch (SQLException ex) {
-            System.err.println("Error loading customers: " + ex.getMessage());
-        }
+        loadRegisteredCustomers(comboBoxRegistered);
 
 
        // Save button action to insert customer into the database
@@ -87,7 +97,7 @@ public class Customers extends Application {
                 pstmt.setString(2, phone); // Sets customer phone
                 pstmt.setString(3, email); // Sets customer email
                 pstmt.executeUpdate(); // Executes the insert statement
-                comboBoxRegistered.getItems().add(name); // Add the new customer to the registered customers combo box  
+                loadRegisteredCustomers(comboBoxRegistered); // Refresh from DB to keep the list in sync
                 textFieldName.clear();
                 textFieldPhone.clear();
                 textFieldEmail.clear();
@@ -110,7 +120,7 @@ public class Customers extends Application {
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, selectedCustomer); // Set the customer name to deactivate
                 pstmt.executeUpdate(); // Execute the update statement
-                comboBoxRegistered.getItems().remove(selectedCustomer); // Remove from combo box
+                loadRegisteredCustomers(comboBoxRegistered); // Refresh from DB after remove
             } catch (SQLException ex) {
                 System.err.println("Error removing customer: " + ex.getMessage());
             }

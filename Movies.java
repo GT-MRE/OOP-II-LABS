@@ -35,6 +35,28 @@ public class Movies extends Application {
             System.err.println("Error loading genres: " + ex.getMessage());
         }
     }
+
+    // Load active movies from the database and populate the registered movies combo box.
+    private void loadRegisteredMovies(ComboBox<String> comboBoxRegistered) {
+        comboBoxRegistered.getItems().clear();
+
+        String sql = "SELECT Title FROM Movies WHERE isactive = 1 ORDER BY Title";
+        try (Connection conn = DatabaseHandler.connect()) {
+            if (conn == null) {
+                System.err.println("Cannot load movies: database connection unavailable.");
+                return;
+            }
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql);
+                 ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    comboBoxRegistered.getItems().add(rs.getString("Title"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Error loading movies: " + ex.getMessage());
+        }
+    }
     
     @Override
     public void start(Stage stage) {
@@ -72,6 +94,7 @@ public class Movies extends Application {
         gridPane.add(buttonRemove, 1, 4);
 
         loadGenres(comboBoxGenre);
+        loadRegisteredMovies(comboBoxRegistered);
 
         
         // Load genres from the database
@@ -90,7 +113,7 @@ public class Movies extends Application {
                     pstmt.setString(1, name); // Set the movie title
                     pstmt.setString(2, genre); // Set the genre
                     pstmt.executeUpdate(); // Execute the insert statement
-                    comboBoxRegistered.getItems().add(name); // Add the new movie to the registered movies combo box
+                    loadRegisteredMovies(comboBoxRegistered); // Refresh from DB to keep the list in sync
                     textFieldName.clear(); // Clears field after saving
                 } catch (SQLException ex) {
                     System.err.println("Error saving movie: " + ex.getMessage());
@@ -111,7 +134,7 @@ public class Movies extends Application {
                     PreparedStatement pstmt = conn.prepareStatement(sql); 
                     pstmt.setString(1, selectedMovie); // Set the movie title to delete
                     pstmt.executeUpdate(); // Execute the delete statement
-                    comboBoxRegistered.getItems().remove(selectedMovie); // Remove from combo box
+                    loadRegisteredMovies(comboBoxRegistered); // Refresh from DB after delete
                 } catch (SQLException ex) {
                     System.err.println("Error removing movie: " + ex.getMessage());
                 }

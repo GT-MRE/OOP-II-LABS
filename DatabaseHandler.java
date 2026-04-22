@@ -8,7 +8,7 @@ import java.sql.Statement;
 public class DatabaseHandler {
 
     // Database connection parameters with environment variable overrides
-    private static final String DB_HOST = getSetting("DB_HOST", "localhost"); //
+    private static final String DB_HOST = getSetting("DB_HOST", "localhost"); 
     private static final String DB_PORT = getSetting("DB_PORT", "3307");
     private static final String DB_NAME = getSetting("DB_NAME", "vls_db");
     private static final String USER = getSetting("DB_USER", getSetting("MYSQL_USER", "root"));

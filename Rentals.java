@@ -273,6 +273,9 @@ public class Rentals extends Application {
                     pstmt.executeUpdate(); // Execute the insert statement
                 }
 
+                loadCustomers(comboBoxCustomer, customerIds); // Refresh active customers from DB
+                loadGenres(comboBoxGenre, genreIds); // Refresh active genres from DB
+                loadMoviesForGenre(comboBoxMovie, movieIds, comboBoxGenre.getValue()); // Refresh movie list for selected genre
                 loadBorrowedRentals(comboBoxBorrowed, rentalIds); // Refresh the borrowed rentals combo box to show the new rental
                 loadReturnedRentals(comboBoxReturned); // Refresh the returned rentals combo box in case there are any changes
                 System.out.println("Rental Saved to MySQL.");
@@ -305,6 +308,9 @@ public class Rentals extends Application {
                     pstmt.executeUpdate();
                 }
 
+                loadCustomers(comboBoxCustomer, customerIds); // Refresh active customers from DB
+                loadGenres(comboBoxGenre, genreIds); // Refresh active genres from DB
+                loadMoviesForGenre(comboBoxMovie, movieIds, comboBoxGenre.getValue()); // Refresh movie list for selected genre
                 loadBorrowedRentals(comboBoxBorrowed, rentalIds); // Refresh the borrowed rentals combo box to remove the returned rental
                 loadReturnedRentals(comboBoxReturned); // Refresh the returned rentals combo box to show the returned rental
                 System.out.println("Movie Returned and Updated in MySQL.");
